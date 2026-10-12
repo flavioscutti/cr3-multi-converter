@@ -12,12 +12,6 @@ I recently wanted an easy way to process raw Canon .CR3 files (like those from m
 
 So, I built **cr3-multi-converter**, a simple and clean Python-based graphical user interface (GUI) designed specifically for batch conversion on Raspberry Pi (fully compatible with touchscreens).
 
-## Features
-* **Batch Conversion:** Convert multiple .CR3 raw files at once.
-* **Dual Output Options:** Save as modern DNG Version 1.6 or 16-bit TIFF (via `dnglab` and `dcraw` / `exiftool`).
-* **Custom UI:** Dark-mode interface built with `tkinter`, featuring custom rounded buttons and auto-hiding overlay scrollbars.
-* **Easy Installation:** Includes an `install.sh` script that automatically sets up dependencies and adds the app straight to your Raspberry Pi application menu with a universal `.desktop` launcher.
-
 ## Check it out on GitHub
 You can find the source code, installation steps, and full documentation here:
 [https://github.com/flavioscutti/cr3-multi-converter](https://github.com/flavioscutti/cr3-multi-converter)
