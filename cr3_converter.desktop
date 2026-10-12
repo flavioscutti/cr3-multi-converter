@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Canon R50V Converter
+Comment=Batch conversion of CR3 files
+Exec=python3 $HOME/cr3-multi-converter/cr3_to_dng.py
+Icon=camera-photo
+Terminal=false
+Type=Application
+Categories=Graphics;Utility;
