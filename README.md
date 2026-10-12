@@ -122,3 +122,16 @@ dnglab --version
 
 * Conversion of very large files can take a while on slower boards: each external tool call has a timeout (120 s for `dnglab` and `dcraw`, 60 s for `exiftool`). You can raise these values in `cr3_to_dng.py` if needed.
 * The interface uses the **Inter** font; if it is not installed, Tkinter falls back to a default font.
+
+---
+
+## Other Linux Distributions
+
+While the application is optimized and tailored for Raspberry Pi OS (ARM), it **can also run on other Linux distributions** (such as Ubuntu, Debian, Fedora, or Arch Linux on x86/x86_64 PCs), as long as Python 3, Tkinter, and the required dependencies are available.
+
+### Installing Dependencies on standard Linux (e.g., Ubuntu / Debian x86_64)
+
+1. **Install system tools (`dcraw` and `exiftool`) via your package manager:**
+   ```bash
+   sudo apt update
+   sudo apt install dcraw libimage-exiftool-perl python3-tk
