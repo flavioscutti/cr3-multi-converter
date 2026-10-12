@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+
+"""
+Canon CR3 Multi Converter
+A graphical batch conversion tool for Canon .CR3 files on Raspberry Pi.
+Author: Flavio Scutti
+"""
+
 import os
 import subprocess
 import threading
@@ -6,7 +13,7 @@ import tkinter as tk
 from tkinter import messagebox
 
 class RoundedButton(tk.Canvas):
-    """Pulsante personalizzato con angoli arrotondati (radius=4px) ed effetto toggle largo quanto l'app"""
+    """Custom button with rounded corners (radius=4px) and full-width toggle effect matching the app style"""
     def __init__(self, parent, text, command, font=("Inter", 26, "bold"), padx=15, pady=14, bg_off="#0d1117", fg_off="#ffffff", bg_on="#ffffff", fg_on="#0d1117"):
         super().__init__(parent, bg="#0d1117", highlightthickness=0, bd=0)
         self.command = command
@@ -20,14 +27,14 @@ class RoundedButton(tk.Canvas):
         self.fg_on = fg_on
         self.is_selected = False
 
-        # Calcolo altezza basata sul font
+        # Calculate height based on font
         self.temp_txt = self.create_text(0, 0, text="Ay", font=font)
         bbox = self.bbox(self.temp_txt)
         self.delete(self.temp_txt)
         self.text_height = bbox[3] - bbox[1]
         self.height = self.text_height + (pady * 2)
         
-        # Larghezza iniziale di sicurezza
+        # Initial safe width
         self.width = 980
         self.configure(width=self.width, height=self.height)
         
@@ -47,10 +54,10 @@ class RoundedButton(tk.Canvas):
         fg_color = self.fg_on if selected else self.fg_off
         border_color = "#30363d" if not selected else "#ffffff"
 
-        # Disegna rettangolo arrotondato (raggio = 4px)
+        # Draw rounded rectangle (radius = 4px)
         self.create_rounded_rect(2, 2, self.width - 2, self.height - 2, radius=4, fill=bg_color, outline=border_color, width=1)
 
-        # Testo allineato a sinistra con padding
+        # Left-aligned text with padding
         self.create_text(self.padx, self.height / 2, text=self.text, font=self.font, fill=fg_color, anchor="w")
 
     def create_rounded_rect(self, x1, y1, x2, y2, radius=4, **kwargs):
@@ -75,7 +82,7 @@ class RoundedButton(tk.Canvas):
             self.command()
 
 class AutoHideScrollbar(tk.Scrollbar):
-    """Scrollbar a scomparsa in stile overlay (Raspberry Pi OS / GTK)."""
+    """Overlay-style auto-hiding scrollbar (Raspberry Pi OS / GTK style)."""
     def __init__(self, parent, target, hide_delay=1000, **kwargs):
         super().__init__(parent, orient="vertical", **kwargs)
         self.target = target
@@ -88,11 +95,11 @@ class AutoHideScrollbar(tk.Scrollbar):
         self.configure(command=target.yview)
         target.configure(yscrollcommand=self.set)
 
-        # Eventi sull'area di testo: mostra la barra quando serve
+        # Text area events: show the scrollbar when needed
         for seq in ("<Motion>", "<MouseWheel>", "<Button-4>", "<Button-5>", "<KeyPress>"):
             target.bind(seq, self._on_activity, add="+")
 
-        # Eventi sulla barra stessa: resta visibile finché ci sei sopra
+        # Scrollbar events: stay visible while hovering over it
         self.bind("<Enter>", self._on_enter)
         self.bind("<Leave>", self._on_leave)
 
@@ -142,7 +149,7 @@ class AutoHideScrollbar(tk.Scrollbar):
 class FileSelectorDialog(tk.Toplevel):
     def __init__(self, parent, initial_dir):
         super().__init__(parent)
-        self.title("Seleziona file .CR3")
+        self.title("Select .CR3 Files")
         self.geometry("1024x768")
         self.transient(parent)
         self.grab_set()
@@ -159,7 +166,7 @@ class FileSelectorDialog(tk.Toplevel):
         self.lbl_path = tk.Label(main_frame, text="", font=("Inter", 22, "bold"), bg="#0d1117", fg="#ffffff", anchor="w")
         self.lbl_path.pack(fill=tk.X, pady=8)
         
-        btn_up = tk.Button(main_frame, text="⬆ Cartella Superiore (← Freccia Sinistra)", command=self.go_parent_dir,
+        btn_up = tk.Button(main_frame, text="⬆ Parent Folder (← Left Arrow)", command=self.go_parent_dir,
                            bg="#21262d", fg="#ffffff", font=("Inter", 22, "bold"), bd=1, relief="solid", highlightthickness=0, padx=15, pady=15)
         btn_up.pack(anchor=tk.W, pady=8)
         
@@ -169,7 +176,7 @@ class FileSelectorDialog(tk.Toplevel):
         self.listbox = tk.Listbox(list_frame, selectmode=tk.EXTENDED, font=("Inter", 26),
                                   bg="#161b22", fg="#ffffff", selectbackground="#30363d", selectforeground="#ffffff", bd=0, highlightthickness=0)
         
-        # Scrollbar con canale ed elementi completamente integrati nello sfondo #161b22
+        # Scrollbar with track and elements fully integrated into the #161b22 background
         scrollbar = tk.Scrollbar(list_frame, orient="vertical", command=self.listbox.yview, width=28,
                                  bg="#161b22", troughcolor="#161b22", activebackground="#30363d", bd=0, highlightthickness=0)
         self.listbox.configure(yscrollcommand=scrollbar.set)
@@ -186,11 +193,11 @@ class FileSelectorDialog(tk.Toplevel):
         btn_frame = tk.Frame(main_frame, bg="#0d1117")
         btn_frame.pack(fill=tk.X, pady=12)
         
-        btn_confirm = tk.Button(btn_frame, text="Conferma Selezionati", command=self.confirm_selection,
+        btn_confirm = tk.Button(btn_frame, text="Confirm Selection", command=self.confirm_selection,
                                 bg="#ffffff", fg="#0d1117", font=("Inter", 22, "bold"), bd=1, relief="solid", highlightthickness=0, padx=20, pady=15)
         btn_confirm.pack(side=tk.LEFT, padx=5)
         
-        btn_cancel = tk.Button(btn_frame, text="Annulla (Esc)", command=self.safe_destroy,
+        btn_cancel = tk.Button(btn_frame, text="Cancel (Esc)", command=self.safe_destroy,
                                bg="#21262d", fg="#ffffff", font=("Inter", 22, "bold"), bd=1, relief="solid", highlightthickness=0, padx=20, pady=15)
         btn_cancel.pack(side=tk.RIGHT, padx=5)
         
@@ -201,7 +208,7 @@ class FileSelectorDialog(tk.Toplevel):
         try:
             if os.path.exists(path):
                 self.current_dir = path
-                self.lbl_path.config(text=f"Percorso: {path}")
+                self.lbl_path.config(text=f"Path: {path}")
                 self.listbox.delete(0, tk.END)
                 items = sorted(os.listdir(path), key=lambda x: (not os.path.isdir(os.path.join(path, x)), x.lower()))
                 for item in items:
@@ -211,7 +218,7 @@ class FileSelectorDialog(tk.Toplevel):
                     elif item.lower().endswith(".cr3"):
                         self.listbox.insert(tk.END, f"[CR3]  {item}")
         except Exception as e:
-            messagebox.showerror("Errore", str(e))
+            messagebox.showerror("Error", str(e))
 
     def go_parent_dir(self):
         if self.is_closing: return
@@ -278,7 +285,7 @@ class FileSelectorDialog(tk.Toplevel):
             self.selected_files = chosen
             self.after(50, self._finalize_destroy)
         else: 
-            messagebox.showwarning("Attenzione", "Seleziona almeno un file .CR3.")
+            messagebox.showwarning("Warning", "Please select at least one .CR3 file.")
 
     def safe_destroy(self):
         if self.is_closing: return
@@ -296,7 +303,7 @@ class FileSelectorDialog(tk.Toplevel):
 class CR3ToDNGApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Canon R50V Convertitore Multiplo")
+        self.root.title("Canon R50V Multiple Converter")
         self.root.geometry("1024x768")
         self.root.minsize(800, 680)
         self.root.resizable(True, True)
@@ -308,42 +315,42 @@ class CR3ToDNGApp:
         main_frame = tk.Frame(root, bg="#0d1117", padx=15, pady=15)
         main_frame.pack(fill=tk.BOTH, expand=True)
 
-        lbl_title = tk.Label(main_frame, text="CANON R50V CONVERTITORE MULTIPLO", font=("Inter", 22, "bold"), bg="#0d1117", fg="#ffffff")
+        lbl_title = tk.Label(main_frame, text="CANON R50V MULTIPLE CONVERTER", font=("Inter", 22, "bold"), bg="#0d1117", fg="#ffffff")
         lbl_title.pack(pady=4)
 
-        self.btn_select = tk.Button(main_frame, text="1. Seleziona File .CR3", command=self.select_files,
+        self.btn_select = tk.Button(main_frame, text="1. Select .CR3 Files", command=self.select_files,
                                     bg="#21262d", fg="#ffffff", font=("Inter", 24, "bold"), bd=1, relief="solid", highlightthickness=0, padx=15, pady=14)
         self.btn_select.pack(fill=tk.X, pady=6)
 
-        self.lbl_status = tk.Label(main_frame, text="Nessun file selezionato", font=("Inter", 20, "bold"), bg="#0d1117", fg="#ffffff")
+        self.lbl_status = tk.Label(main_frame, text="No files selected", font=("Inter", 20, "bold"), bg="#0d1117", fg="#ffffff")
         self.lbl_status.pack(pady=4)
 
         options_container = tk.Frame(main_frame, bg="#0d1117")
         options_container.pack(fill=tk.X, pady=6)
 
-        self.var_tiff = tk.BooleanVar(value=True)       
+        self.var_tiff = tk.BooleanVar(value=True)        
         self.var_dng_16 = tk.BooleanVar(value=False)  
 
-        self.btn_tiff = RoundedButton(options_container, text="TIFF a 16-bit", command=lambda: self.toggle_option('tiff'), font=("Inter", 24, "bold"), padx=15, pady=14)
+        self.btn_tiff = RoundedButton(options_container, text="16-bit TIFF", command=lambda: self.toggle_option('tiff'), font=("Inter", 24, "bold"), padx=15, pady=14)
         self.btn_tiff.pack(fill=tk.X, pady=4)
 
-        self.btn_dng = RoundedButton(options_container, text="DNG Versione 1.6", command=lambda: self.toggle_option('dng'), font=("Inter", 24, "bold"), padx=15, pady=14)
+        self.btn_dng = RoundedButton(options_container, text="DNG Version 1.6", command=lambda: self.toggle_option('dng'), font=("Inter", 24, "bold"), padx=15, pady=14)
         self.btn_dng.pack(fill=tk.X, pady=4)
 
         self.update_toggle_ui()
 
-        self.btn_convert = tk.Button(main_frame, text="2. Avvia Conversione", command=self.start_conversion, state=tk.DISABLED,
+        self.btn_convert = tk.Button(main_frame, text="2. Start Conversion", command=self.start_conversion, state=tk.DISABLED,
                                      bg="#ffffff", fg="#0d1117", font=("Inter", 24, "bold"), bd=1, relief="solid", highlightthickness=0, padx=15, pady=14)
         self.btn_convert.pack(fill=tk.X, pady=6)
 
-        # Area di log con scrollbar a scomparsa sovrapposta al testo
+        # Log area with auto-hiding scrollbar superimposed over the text
         log_container = tk.Frame(main_frame, bg="#161b22", bd=1, relief="solid")
         log_container.pack(fill=tk.BOTH, expand=True, pady=6)
 
         self.txt_log = tk.Text(log_container, font=("Inter", 13), bg="#161b22", fg="#e6edf3", bd=0, highlightthickness=0, state="disabled")
         self.txt_log.pack(fill=tk.BOTH, expand=True)
 
-        # Scrollbar a scomparsa, sovrapposta al testo
+        # Auto-hiding scrollbar superimposed over the text
         self.log_scroll = AutoHideScrollbar(log_container, self.txt_log, hide_delay=1000, width=14,
                                             bg="#30363d", troughcolor="#161b22", activebackground="#484f58",
                                             bd=0, highlightthickness=0)
@@ -357,17 +364,17 @@ class CR3ToDNGApp:
 
     def update_toggle_ui(self):
         if self.var_tiff.get():
-            self.btn_tiff.text = "✔ TIFF a 16-bit"
+            self.btn_tiff.text = "✔ 16-bit TIFF"
             self.btn_tiff.draw(True)
         else:
-            self.btn_tiff.text = "  TIFF a 16-bit"
+            self.btn_tiff.text = "  16-bit TIFF"
             self.btn_tiff.draw(False)
 
         if self.var_dng_16.get():
-            self.btn_dng.text = "✔ DNG Versione 1.6"
+            self.btn_dng.text = "✔ DNG Version 1.6"
             self.btn_dng.draw(True)
         else:
-            self.btn_dng.text = "  DNG Versione 1.6"
+            self.btn_dng.text = "  DNG Version 1.6"
             self.btn_dng.draw(False)
 
     def log_safe(self, message):
@@ -388,13 +395,13 @@ class CR3ToDNGApp:
 
         if dialog.selected_files:
             self.files_to_convert = dialog.selected_files
-            self.lbl_status.config(text=f"{len(self.files_to_convert)} file .CR3 pronti")
+            self.lbl_status.config(text=f"{len(self.files_to_convert)} .CR3 files ready")
             self.btn_convert.config(state=tk.NORMAL)
-            self.log_safe(f"Caricati {len(self.files_to_convert)} file .CR3 da: {self.last_dir}")
+            self.log_safe(f"Loaded {len(self.files_to_convert)} .CR3 files from: {self.last_dir}")
 
     def start_conversion(self):
         if not (self.var_tiff.get() or self.var_dng_16.get()):
-            messagebox.showwarning("Attenzione", "Seleziona almeno un formato di output da generare!")
+            messagebox.showwarning("Warning", "Please select at least one output format to generate!")
             return
 
         self.btn_select.config(state=tk.DISABLED)
@@ -412,7 +419,7 @@ class CR3ToDNGApp:
             dir_name, file_name = os.path.split(src_path)
             base_name = os.path.splitext(file_name)[0]
             
-            status_text = f"Elaborazione [{idx}/{total}]: {file_name}"
+            status_text = f"Processing [{idx}/{total}]: {file_name}"
             self.root.after(0, lambda s=status_text: self.status_safe(s))
             self.root.after(0, lambda s=status_text: self.log_safe(f"\n{s}"))
             
@@ -428,11 +435,11 @@ class CR3ToDNGApp:
                     
                     res_dng = subprocess.run(["dnglab", "convert", src_path, out_dng], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=120)
                     if res_dng.returncode == 0:
-                        self.root.after(0, lambda f=os.path.basename(out_dng): self.log_safe(f"  [OK] DNG Versione 1.6: {f}"))
+                        self.root.after(0, lambda f=os.path.basename(out_dng): self.log_safe(f"  [OK] DNG Version 1.6: {f}"))
                         file_success = True
                     else:
                         err = res_dng.stderr.strip()
-                        self.root.after(0, lambda e=err: self.log_safe(f"  [ERRORE] dnglab: {e}"))
+                        self.root.after(0, lambda e=err: self.log_safe(f"  [ERROR] dnglab: {e}"))
 
                 if do_tiff:
                     temp_dng = os.path.join(dir_name, f"{base_name}_temp_conversion.dng")
@@ -455,29 +462,29 @@ class CR3ToDNGApp:
 
                             subprocess.run(["exiftool", "-TagsFromFile", temp_dng, "-all:all", "-overwrite_original", out_tiff], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=60)
 
-                            self.root.after(0, lambda f=os.path.basename(out_tiff): self.log_safe(f"  [OK] TIFF 16-bit: {f}"))
+                            self.root.after(0, lambda f=os.path.basename(out_tiff): self.log_safe(f"  [OK] 16-bit TIFF: {f}"))
                             file_success = True
                         else:
                             err = res_dcraw.stderr.strip()
-                            self.root.after(0, lambda e=err: self.log_safe(f"  [ERRORE] dcraw TIFF: {e}"))
+                            self.root.after(0, lambda e=err: self.log_safe(f"  [ERROR] dcraw TIFF: {e}"))
 
                         if os.path.exists(temp_dng):
                             os.remove(temp_dng)
                     else:
                         err = res_dnglab.stderr.strip()
-                        self.root.after(0, lambda e=err: self.log_safe(f"  [ERRORE] dnglab per TIFF: {e}"))
+                        self.root.after(0, lambda e=err: self.log_safe(f"  [ERROR] dnglab for TIFF: {e}"))
 
             except Exception as e:
                 err_str = str(e)
-                self.root.after(0, lambda err=err_str: self.log_safe(f"  [ECCEZIONE]: {err}"))
+                self.root.after(0, lambda err=err_str: self.log_safe(f"  [EXCEPTION]: {err}"))
 
             if file_success:
                 success_count += 1
 
-        finish_text = f"Completato! {success_count}/{total} file elaborati."
+        finish_text = f"Completed! {success_count}/{total} files processed."
         self.root.after(0, lambda: self.status_safe(finish_text))
-        self.root.after(0, lambda: self.log_safe(f"\nSessione completata! Elaborati {success_count}/{total} file."))
-        self.root.after(0, lambda: messagebox.showinfo("Completato", f"Conversione multipla completata ({success_count} file elaborati)."))
+        self.root.after(0, lambda: self.log_safe(f"\nSession completed! Processed {success_count}/{total} files."))
+        self.root.after(0, lambda: messagebox.showinfo("Completed", f"Multiple conversion completed ({success_count} files processed)."))
         self.root.after(0, lambda: self.btn_select.config(state=tk.NORMAL))
         self.root.after(0, lambda: self.btn_convert.config(state=tk.NORMAL))
 
