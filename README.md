@@ -1,6 +1,6 @@
 # Canon CR3 Multi Converter for Raspberry Pi
 
-A graphical Python (Tkinter) application designed for touchscreen use on Raspberry Pi OS. It converts `.CR3` files in batch (for example from a Canon R50V or any other Canon camera supported by `dnglab`) into:
+A graphical Python (Tkinter) application designed for touchscreen use on Raspberry Pi OS. It converts `.CR3` files in batch (for example from a Canon EOS R50V or any other Canon camera supported by `dnglab`) into:
 
 - **DNG Version 1.6** (via `dnglab`)
 - **16-bit TIFF** with white balance and the original metadata preserved (via `dcraw` and `exiftool`)
@@ -9,7 +9,7 @@ A graphical Python (Tkinter) application designed for touchscreen use on Raspber
 
 Hi everyone!
 
-I recently wanted an easy way to process raw Canon .CR3 files (like those from my Canon R50 V) directly on my Raspberry Pi running Raspberry Pi OS, avoiding heavy proprietary software that lacks native support for Linux ARM.
+I recently wanted an easy way to process raw Canon .CR3 files (like those from a Canon EOS R50V) directly on Raspberry Pi running Raspberry Pi OS, avoiding heavy proprietary software that lacks native support for Linux ARM.
 
 So, I built **cr3-multi-converter**, a simple and clean Python-based graphical user interface (GUI) designed specifically for batch conversion on Raspberry Pi (fully compatible with touchscreens).
 
