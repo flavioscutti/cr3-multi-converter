@@ -300,6 +300,139 @@ class FileSelectorDialog(tk.Toplevel):
             pass
         self.destroy()
 
+class FolderSelectorDialog(tk.Toplevel):
+    """Folder picker in the same style as the file selector.
+    After closing, `result` is:
+      - None   -> cancelled, keep the previous setting
+      - ""     -> reset to the default (same folder as the source files)
+      - a path -> the chosen output folder
+    """
+    def __init__(self, parent, initial_dir):
+        super().__init__(parent)
+        self.title("Select Output Folder")
+        self.geometry("1024x768")
+        self.transient(parent)
+        self.grab_set()
+
+        self.configure(bg="#0d1117")
+
+        self.result = None
+        self.current_dir = initial_dir if (initial_dir and os.path.isdir(initial_dir)) else os.path.expanduser("~")
+        self.is_closing = False
+
+        main_frame = tk.Frame(self, bg="#0d1117", padx=20, pady=20)
+        main_frame.pack(fill=tk.BOTH, expand=True)
+
+        self.lbl_path = tk.Label(main_frame, text="", font=("Inter", 22, "bold"), bg="#0d1117", fg="#ffffff", anchor="w")
+        self.lbl_path.pack(fill=tk.X, pady=8)
+
+        btn_up = tk.Button(main_frame, text="⬆ Parent Folder (← Left Arrow)", command=self.go_parent_dir,
+                           bg="#21262d", fg="#ffffff", font=("Inter", 22, "bold"), bd=1, relief="solid", highlightthickness=0, padx=15, pady=15)
+        btn_up.pack(anchor=tk.W, pady=8)
+
+        list_frame = tk.Frame(main_frame, bg="#161b22", bd=1, relief="solid")
+        list_frame.pack(fill=tk.BOTH, expand=True, pady=8)
+
+        self.listbox = tk.Listbox(list_frame, selectmode=tk.SINGLE, font=("Inter", 26),
+                                  bg="#161b22", fg="#ffffff", selectbackground="#30363d", selectforeground="#ffffff", bd=0, highlightthickness=0)
+
+        scrollbar = tk.Scrollbar(list_frame, orient="vertical", command=self.listbox.yview, width=28,
+                                 bg="#161b22", troughcolor="#161b22", activebackground="#30363d", bd=0, highlightthickness=0)
+        self.listbox.configure(yscrollcommand=scrollbar.set)
+
+        self.listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        self.listbox.bind("<Double-1>", self.on_open_folder)
+        self.listbox.bind("<Return>", self.on_open_folder)
+        self.listbox.bind("<Right>", self.on_open_folder)
+        self.listbox.bind("<Left>", lambda e: self.go_parent_dir())
+        self.listbox.bind("<Escape>", lambda e: self.cancel())
+
+        btn_frame = tk.Frame(main_frame, bg="#0d1117")
+        btn_frame.pack(fill=tk.X, pady=12)
+
+        btn_use = tk.Button(btn_frame, text="Use This Folder", command=self.use_this_folder,
+                            bg="#ffffff", fg="#0d1117", font=("Inter", 22, "bold"), bd=1, relief="solid", highlightthickness=0, padx=20, pady=15)
+        btn_use.pack(side=tk.LEFT, padx=5)
+
+        btn_default = tk.Button(btn_frame, text="Same as Source", command=self.use_default,
+                                bg="#21262d", fg="#ffffff", font=("Inter", 22, "bold"), bd=1, relief="solid", highlightthickness=0, padx=20, pady=15)
+        btn_default.pack(side=tk.LEFT, padx=5)
+
+        btn_cancel = tk.Button(btn_frame, text="Cancel (Esc)", command=self.cancel,
+                               bg="#21262d", fg="#ffffff", font=("Inter", 22, "bold"), bd=1, relief="solid", highlightthickness=0, padx=20, pady=15)
+        btn_cancel.pack(side=tk.RIGHT, padx=5)
+
+        self.load_directory(self.current_dir)
+        self.listbox.focus_set()
+
+    def load_directory(self, path):
+        try:
+            if os.path.isdir(path):
+                items = sorted((i for i in os.listdir(path) if not i.startswith(".") and os.path.isdir(os.path.join(path, i))), key=lambda x: x.lower())
+                self.current_dir = path
+                self.lbl_path.config(text=f"Path: {path}")
+                self.listbox.delete(0, tk.END)
+                for item in items:
+                    self.listbox.insert(tk.END, f"[DIR]  {item}")
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+
+    def go_parent_dir(self):
+        if self.is_closing: return
+        parent = os.path.dirname(self.current_dir)
+        if parent and parent != self.current_dir:
+            self.load_directory(parent)
+
+    def get_current_name(self):
+        sel = self.listbox.curselection()
+        if sel:
+            text = self.listbox.get(sel[0])
+        else:
+            try:
+                text = self.listbox.get(self.listbox.index(tk.ACTIVE))
+            except Exception:
+                return None
+        if not text: return None
+        return text.split("]  ")[1] if "]  " in text else text[6:].strip()
+
+    def on_open_folder(self, event):
+        if self.is_closing: return "break"
+        name = self.get_current_name()
+        if name:
+            self.load_directory(os.path.join(self.current_dir, name))
+        return "break"
+
+    def use_this_folder(self):
+        if self.is_closing: return
+        if not os.access(self.current_dir, os.W_OK):
+            messagebox.showwarning("Warning", "This folder is not writable. Choose another one.")
+            return
+        self.result = self.current_dir
+        self._close()
+
+    def use_default(self):
+        if self.is_closing: return
+        self.result = ""
+        self._close()
+
+    def cancel(self):
+        if self.is_closing: return
+        self.result = None
+        self._close()
+
+    def _close(self):
+        self.is_closing = True
+        self.after(50, self._finalize_destroy)
+
+    def _finalize_destroy(self):
+        try:
+            self.grab_release()
+        except Exception:
+            pass
+        self.destroy()
+
 class CR3ToDNGApp:
     def __init__(self, root):
         self.root = root
@@ -311,6 +444,7 @@ class CR3ToDNGApp:
 
         self.files_to_convert = []
         self.last_dir = os.path.expanduser("~")
+        self.output_dir = None  # None = same folder as the source files
 
         main_frame = tk.Frame(root, bg="#0d1117", padx=15, pady=15)
         main_frame.pack(fill=tk.BOTH, expand=True)
@@ -339,6 +473,11 @@ class CR3ToDNGApp:
 
         self.update_toggle_ui()
 
+        # Optional output folder (default: same folder as the source files)
+        self.btn_output = tk.Button(main_frame, text=self.output_button_text(), command=self.select_output_dir,
+                                    bg="#21262d", fg="#ffffff", font=("Inter", 20, "bold"), bd=1, relief="solid", highlightthickness=0, padx=15, pady=10)
+        self.btn_output.pack(fill=tk.X, pady=6)
+
         self.btn_convert = tk.Button(main_frame, text="2. Start Conversion", command=self.start_conversion, state=tk.DISABLED,
                                      bg="#ffffff", fg="#0d1117", font=("Inter", 24, "bold"), bd=1, relief="solid", highlightthickness=0, padx=15, pady=14)
         self.btn_convert.pack(fill=tk.X, pady=6)
@@ -354,6 +493,29 @@ class CR3ToDNGApp:
         self.log_scroll = AutoHideScrollbar(log_container, self.txt_log, hide_delay=1000, width=14,
                                             bg="#30363d", troughcolor="#161b22", activebackground="#484f58",
                                             bd=0, highlightthickness=0)
+
+    def output_button_text(self):
+        if not self.output_dir:
+            return "Save to: Same folder as source files"
+        path = self.output_dir
+        if len(path) > 38:
+            path = "…" + path[-37:]
+        return f"Save to: {path}"
+
+    def select_output_dir(self):
+        start_dir = self.output_dir or self.last_dir
+        dialog = FolderSelectorDialog(self.root, start_dir)
+        self.root.wait_window(dialog)
+
+        if dialog.result is None:
+            return  # cancelled: keep the previous setting
+
+        self.output_dir = dialog.result or None
+        self.btn_output.config(text=self.output_button_text())
+        if self.output_dir:
+            self.log_safe(f"Output folder: {self.output_dir}")
+        else:
+            self.log_safe("Output folder: same folder as source files")
 
     def toggle_option(self, opt):
         if opt == 'tiff':
@@ -404,7 +566,13 @@ class CR3ToDNGApp:
             messagebox.showwarning("Warning", "Please select at least one output format to generate!")
             return
 
+        # The chosen output folder may have disappeared (e.g. a USB drive was removed)
+        if self.output_dir and not (os.path.isdir(self.output_dir) and os.access(self.output_dir, os.W_OK)):
+            messagebox.showwarning("Warning", f"The output folder is not available or not writable:\n{self.output_dir}\n\nChoose another folder with the \"Save to\" button.")
+            return
+
         self.btn_select.config(state=tk.DISABLED)
+        self.btn_output.config(state=tk.DISABLED)
         self.btn_convert.config(state=tk.DISABLED)
 
         threading.Thread(target=self.convert_process_background, daemon=True).start()
@@ -413,11 +581,14 @@ class CR3ToDNGApp:
         success_count = 0
         do_tiff = self.var_tiff.get()
         do_dng_16 = self.var_dng_16.get()
+        output_dir = self.output_dir
         total = len(self.files_to_convert)
 
         for idx, src_path in enumerate(self.files_to_convert, 1):
             dir_name, file_name = os.path.split(src_path)
             base_name = os.path.splitext(file_name)[0]
+            # Destination: the chosen folder, or the folder of the source file by default
+            out_dir = output_dir if output_dir else dir_name
             
             status_text = f"Processing [{idx}/{total}]: {file_name}"
             self.root.after(0, lambda s=status_text: self.status_safe(s))
@@ -427,10 +598,10 @@ class CR3ToDNGApp:
 
             try:
                 if do_dng_16:
-                    out_dng = os.path.join(dir_name, f"{base_name}.dng")
+                    out_dng = os.path.join(out_dir, f"{base_name}.dng")
                     c = 1
                     while os.path.exists(out_dng):
-                        out_dng = os.path.join(dir_name, f"{base_name}_{c}.dng")
+                        out_dng = os.path.join(out_dir, f"{base_name}_{c}.dng")
                         c += 1
                     
                     res_dng = subprocess.run(["dnglab", "convert", src_path, out_dng], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=120)
@@ -442,14 +613,14 @@ class CR3ToDNGApp:
                         self.root.after(0, lambda e=err: self.log_safe(f"  [ERROR] dnglab: {e}"))
 
                 if do_tiff:
-                    temp_dng = os.path.join(dir_name, f"{base_name}_temp_conversion.dng")
+                    temp_dng = os.path.join(out_dir, f"{base_name}_temp_conversion.dng")
                     res_dnglab = subprocess.run(["dnglab", "convert", src_path, temp_dng], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=120)
                     
                     if res_dnglab.returncode == 0:
-                        out_tiff = os.path.join(dir_name, f"{base_name}.tiff")
+                        out_tiff = os.path.join(out_dir, f"{base_name}.tiff")
                         c = 1
                         while os.path.exists(out_tiff):
-                            out_tiff = os.path.join(dir_name, f"{base_name}_{c}.tiff")
+                            out_tiff = os.path.join(out_dir, f"{base_name}_{c}.tiff")
                             c += 1
 
                         res_dcraw = subprocess.run(["dcraw", "-T", "-6", "-w", temp_dng], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=120)
@@ -486,6 +657,7 @@ class CR3ToDNGApp:
         self.root.after(0, lambda: self.log_safe(f"\nSession completed! Processed {success_count}/{total} files."))
         self.root.after(0, lambda: messagebox.showinfo("Completed", f"Multiple conversion completed ({success_count} files processed)."))
         self.root.after(0, lambda: self.btn_select.config(state=tk.NORMAL))
+        self.root.after(0, lambda: self.btn_output.config(state=tk.NORMAL))
         self.root.after(0, lambda: self.btn_convert.config(state=tk.NORMAL))
 
 if __name__ == "__main__":
