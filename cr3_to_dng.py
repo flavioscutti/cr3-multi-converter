@@ -146,6 +146,33 @@ class AutoHideScrollbar(tk.Scrollbar):
             self.after_cancel(self._after_id)
             self._after_id = None
 
+class GreyButton(tk.Button):
+    """Grey button: it stays grey (also on hover, or when a dialog closes over it)
+    and turns white only while it is pressed, going back to grey on release."""
+    def __init__(self, parent, **kwargs):
+        kwargs.setdefault("bg", "#21262d")
+        kwargs.setdefault("fg", "#ffffff")
+        normal_bg = kwargs["bg"]
+        normal_fg = kwargs["fg"]
+        # Same colors in the "active" state, so hovering does not light the button up
+        kwargs["activebackground"] = normal_bg
+        kwargs["activeforeground"] = normal_fg
+        kwargs.setdefault("takefocus", 0)
+        super().__init__(parent, **kwargs)
+        self._normal_bg = normal_bg
+        self._normal_fg = normal_fg
+        self.bind("<ButtonPress-1>", self._on_press)
+        self.bind("<ButtonRelease-1>", self._on_release)
+
+    def _on_press(self, event=None):
+        if str(self.cget("state")) == "disabled":
+            return
+        self.configure(bg="#ffffff", fg="#0d1117", activebackground="#ffffff", activeforeground="#0d1117")
+
+    def _on_release(self, event=None):
+        self.configure(bg=self._normal_bg, fg=self._normal_fg,
+                       activebackground=self._normal_bg, activeforeground=self._normal_fg)
+
 class FileSelectorDialog(tk.Toplevel):
     def __init__(self, parent, initial_dir):
         super().__init__(parent)
@@ -452,7 +479,7 @@ class CR3ToDNGApp:
         lbl_title = tk.Label(main_frame, text="CR3 MULTI CONVERTER", font=("Inter", 22, "bold"), bg="#0d1117", fg="#ffffff")
         lbl_title.pack(pady=4)
 
-        self.btn_select = tk.Button(main_frame, text="1. Select .CR3 Files", command=self.select_files,
+        self.btn_select = GreyButton(main_frame, text="1. Select .CR3 Files", command=self.select_files,
                                     bg="#21262d", fg="#ffffff", font=("Inter", 24, "bold"), bd=1, relief="solid", highlightthickness=0, padx=15, pady=14)
         self.btn_select.pack(fill=tk.X, pady=6)
 
@@ -474,7 +501,7 @@ class CR3ToDNGApp:
         self.update_toggle_ui()
 
         # Optional output folder (default: same folder as the source files)
-        self.btn_output = tk.Button(main_frame, text=self.output_button_text(), command=self.select_output_dir,
+        self.btn_output = GreyButton(main_frame, text=self.output_button_text(), command=self.select_output_dir,
                                     bg="#21262d", fg="#ffffff", font=("Inter", 20, "bold"), bd=1, relief="solid", highlightthickness=0, padx=15, pady=10)
         self.btn_output.pack(fill=tk.X, pady=6)
 
