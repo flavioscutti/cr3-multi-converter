@@ -104,7 +104,7 @@ mkdir -p ~/.local/share/applications
 mousepad ~/.local/share/applications/cr3_converter.desktop &
 ```
 
-After saving, the app appears in the Graphics or Utility category of the system menu. If it does not show up right away, log out and back in.
+After saving, the app appears in the Graphics category of the system menu. If it does not show up right away, log out and back in, or restart the Raspberry Pi.
 
 **Step 4: README (optional)**
 
