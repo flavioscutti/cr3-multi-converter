@@ -171,3 +171,9 @@ python3 ~/cr3-multi-converter/cr3_to_dng.py
 ## Disclaimer
 
 This is an independent, unofficial project. It is not affiliated with, endorsed by or sponsored by Canon Inc. Canon and EOS are trademarks of Canon Inc.
+
+## License
+
+This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for details.
+
+The external tools used by the app (`dnglab`, `dcraw`, ExifTool) and the Inter font are not part of this repository and have their own licenses.
