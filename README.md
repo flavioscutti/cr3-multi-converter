@@ -161,3 +161,8 @@ sudo chmod +x /usr/local/bin/dnglab
 ```bash
 python3 ~/cr3-multi-converter/cr3_to_dng.py
 ```
+  ## Disclaimer
+
+  This is an independent, unofficial project. It is not affiliated with,
+  endorsed by or sponsored by Canon Inc. Canon and EOS are trademarks of
+  Canon Inc.
