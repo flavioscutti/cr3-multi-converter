@@ -11,6 +11,8 @@ I wanted an easy way to process raw Canon `.CR3` files (like those from a Canon 
 
 RAW editors do not always help either: in our testing, Darktable 5.6.2 (Flatpak, bundling LibRaw 0.22.0) did not work with `.CR3` files from the Canon EOS R50 V. This tool converts `.CR3` files to DNG or TIFF so they can be opened by any editor. Support in RAW editors may improve with newer LibRaw releases.
 
+![Canon CR3 Multi Converter](screenshot.png)
+
 ## System Requirements
 
 * `dnglab`
