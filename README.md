@@ -1,13 +1,13 @@
 # CR3 Multi Converter for Raspberry Pi
 
-A graphical Python (Tkinter) application designed for touchscreen use on Raspberry Pi OS. It converts `.CR3` files in batch (for example from a Canon EOS R50V or any other Canon camera supported by `dnglab`) into:
+A graphical Python (Tkinter) application designed for touchscreen use on Raspberry Pi OS. It converts `.CR3` files in batch (for example from a Canon EOS R50 V or any other Canon camera supported by `dnglab`) into:
 
 * **DNG Version 1.6** (via `dnglab`)
 * **16-bit TIFF** with white balance and the original metadata preserved (via `dcraw` and `exiftool`)
 
 ## Why this tool?
 
-I wanted an easy way to process raw Canon `.CR3` files (like those from a Canon EOS R50V) directly on a Raspberry Pi running Raspberry Pi OS, because Canon's official software has no native version for Linux or ARM CPUs.
+I wanted an easy way to process raw Canon `.CR3` files (like those from a Canon EOS R50 V) directly on a Raspberry Pi running Raspberry Pi OS, because Canon's official software has no native version for Linux or ARM CPUs.
 
 RAW editors do not always help either: in our testing, Darktable 5.6.2 (Flatpak, bundling LibRaw 0.22.0) did not work with `.CR3` files from the Canon EOS R50 V. This tool converts `.CR3` files to DNG or TIFF so they can be opened by any editor. Support in RAW editors may improve with newer LibRaw releases.
 
@@ -114,11 +114,17 @@ mousepad ~/cr3-multi-converter/README.md &
 
 ## Usage
 
-1. Click **1. Select .CR3 Files** and choose one or more files (the dialog supports folder navigation and multiple selection).
-2. Toggle the output formats you want: **16-bit TIFF** and/or **DNG Version 1.6**.
-3. Click **2. Start Conversion**. Progress and errors appear in the log area.
+1. Click **1. Select .CR3 Files** and choose one or more files. The dialog supports folder navigation and multiple selection.
+2. To add more files, even from other folders, click the same button again: after the first selection it becomes **1. Add .CR3 Files**. New selections are added to the list until you start the conversion, and files already in the list are skipped.
+3. Toggle the output formats you want: **16-bit TIFF** and/or **DNG Version 1.6**.
+4. (Optional) Click the **Save to** button to choose where the converted files are saved. By default each file is saved next to its original. The choice applies until you close the app.
+5. Click **2. Start Conversion**.
 
-Converted files are saved next to the originals. If a file with the same name already exists, a numeric suffix is added (`_1`, `_2`, ...).
+The log area lists every file you add (with its folder) and the result of each conversion. It is kept for the whole session and cleared only when you close the app, so you can review everything that was converted. After each conversion the list of waiting files is emptied and you can start a new batch.
+
+Buttons are white when they can be used and grey when they are off (for example, while a conversion is running).
+
+If a file with the same name already exists in the destination folder, a numeric suffix is added (`_1`, `_2`, ...).
 
 ## Compatibility
 
@@ -161,8 +167,7 @@ sudo chmod +x /usr/local/bin/dnglab
 ```bash
 python3 ~/cr3-multi-converter/cr3_to_dng.py
 ```
-  ## Disclaimer
 
-  This is an independent, unofficial project. It is not affiliated with,
-  endorsed by or sponsored by Canon Inc. Canon and EOS are trademarks of
-  Canon Inc.
+## Disclaimer
+
+This is an independent, unofficial project. It is not affiliated with, endorsed by or sponsored by Canon Inc. Canon and EOS are trademarks of Canon Inc.
