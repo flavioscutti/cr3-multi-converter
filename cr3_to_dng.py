@@ -178,7 +178,7 @@ class LightButton(tk.Button):
     """Main action button: white when it can be used, a lighter grey when it is off.
     While pressed it flashes grey, then goes back to white on release."""
     ON_BG, ON_FG = "#ffffff", "#0d1117"
-    OFF_BG, OFF_FG = "#30363d", "#8b949e"
+    OFF_BG, OFF_FG = "#21262d", "#8b949e"
     PRESS_BG, PRESS_FG = "#21262d", "#ffffff"
 
     def __init__(self, parent, **kwargs):
