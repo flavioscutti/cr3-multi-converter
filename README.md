@@ -9,7 +9,7 @@ A graphical Python (Tkinter) application designed for touchscreen use on Raspber
 
 Hi everyone!
 
-I recently wanted an easy way to process raw Canon .CR3 files (like those from a Canon EOS R50V) directly on Raspberry Pi running Raspberry Pi OS, avoiding heavy proprietary software that lacks native support for Linux ARM.
+I recently wanted an easy way to process raw Canon .CR3 files (like those from a Canon EOS R50V) directly on a Raspberry Pi running Raspberry Pi OS, because official proprietary software lacks native support for Linux and ARM CPUs, and software like Darktable currently lacks the appropriate libraries to decode files from newer Canon cameras.
 
 So, I built **cr3-multi-converter**, a simple and clean Python-based graphical user interface (GUI) designed specifically for batch conversion on Raspberry Pi (fully compatible with touchscreens).
 
