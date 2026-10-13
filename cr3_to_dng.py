@@ -583,10 +583,35 @@ class CR3ToDNGApp:
             self.last_dir = dialog.current_dir
 
         if dialog.selected_files:
-            self.files_to_convert = dialog.selected_files
-            self.lbl_status.config(text=f"{len(self.files_to_convert)} .CR3 files ready")
+            # New selections are added to the files already waiting for conversion
+            already_listed = set(self.files_to_convert)
+            new_files = [p for p in dialog.selected_files if p not in already_listed]
+            skipped = len(dialog.selected_files) - len(new_files)
+
+            if not new_files:
+                self.log_safe("No new files added: the selected files are already in the list")
+                return
+
+            first_selection = not self.files_to_convert
+            self.files_to_convert.extend(new_files)
+
+            added = len(new_files)
+            total_ready = len(self.files_to_convert)
+            added_noun = "file" if added == 1 else "files"
+            total_noun = "file" if total_ready == 1 else "files"
+
+            self.lbl_status.config(text=f"{total_ready} .CR3 {total_noun} ready")
             self.btn_convert.config(state=tk.NORMAL)
-            self.log_safe(f"Loaded {len(self.files_to_convert)} .CR3 files from: {self.last_dir}")
+
+            if first_selection:
+                self.log_safe(f"Loaded {added} .CR3 {added_noun}")
+            else:
+                self.log_safe(f"Added {added} .CR3 {added_noun} ({total_ready} total)")
+            for path in new_files:
+                folder, name = os.path.split(path)
+                self.log_safe(f"{name} file from: {folder}")
+            if skipped:
+                self.log_safe(f"({skipped} already in the list, skipped)")
 
     def start_conversion(self):
         if not (self.var_tiff.get() or self.var_dng_16.get()):
@@ -609,9 +634,10 @@ class CR3ToDNGApp:
         do_tiff = self.var_tiff.get()
         do_dng_16 = self.var_dng_16.get()
         output_dir = self.output_dir
-        total = len(self.files_to_convert)
+        files = list(self.files_to_convert)
+        total = len(files)
 
-        for idx, src_path in enumerate(self.files_to_convert, 1):
+        for idx, src_path in enumerate(files, 1):
             dir_name, file_name = os.path.split(src_path)
             base_name = os.path.splitext(file_name)[0]
             # Destination: the chosen folder, or the folder of the source file by default
@@ -681,11 +707,13 @@ class CR3ToDNGApp:
 
         finish_text = f"Completed! {success_count}/{total} files processed."
         self.root.after(0, lambda: self.status_safe(finish_text))
-        self.root.after(0, lambda: self.log_safe(f"\nSession completed! Processed {success_count}/{total} files."))
+        self.root.after(0, lambda: self.log_safe(f"\nBatch completed! Processed {success_count}/{total} files."))
         self.root.after(0, lambda: messagebox.showinfo("Completed", f"Multiple conversion completed ({success_count} files processed)."))
+        # The converted files leave the waiting list; the log keeps the history until the app is closed
+        self.root.after(0, lambda: self.files_to_convert.clear())
         self.root.after(0, lambda: self.btn_select.config(state=tk.NORMAL))
         self.root.after(0, lambda: self.btn_output.config(state=tk.NORMAL))
-        self.root.after(0, lambda: self.btn_convert.config(state=tk.NORMAL))
+        self.root.after(0, lambda: self.btn_convert.config(state=tk.DISABLED))
 
 if __name__ == "__main__":
     root = tk.Tk()
