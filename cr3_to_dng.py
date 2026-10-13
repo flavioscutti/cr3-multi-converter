@@ -158,6 +158,7 @@ class GreyButton(tk.Button):
         kwargs["activebackground"] = normal_bg
         kwargs["activeforeground"] = normal_fg
         kwargs.setdefault("takefocus", 0)
+        kwargs.setdefault("disabledforeground", "#8b949e")
         super().__init__(parent, **kwargs)
         self._normal_bg = normal_bg
         self._normal_fg = normal_fg
@@ -172,6 +173,52 @@ class GreyButton(tk.Button):
     def _on_release(self, event=None):
         self.configure(bg=self._normal_bg, fg=self._normal_fg,
                        activebackground=self._normal_bg, activeforeground=self._normal_fg)
+
+class LightButton(tk.Button):
+    """Main action button: white when it can be used, a lighter grey when it is off.
+    While pressed it flashes grey, then goes back to white on release."""
+    ON_BG, ON_FG = "#ffffff", "#0d1117"
+    OFF_BG, OFF_FG = "#30363d", "#8b949e"
+    PRESS_BG, PRESS_FG = "#21262d", "#ffffff"
+
+    def __init__(self, parent, **kwargs):
+        state = kwargs.pop("state", tk.NORMAL)
+        kwargs.setdefault("takefocus", 0)
+        super().__init__(parent, **kwargs)
+        self._enabled = True
+        self._apply_state(state)
+        self.bind("<ButtonPress-1>", self._on_press)
+        self.bind("<ButtonRelease-1>", self._on_release)
+
+    def _paint(self, bg, fg):
+        # Same colors in the "active" and "disabled" states, so hovering does not change the look
+        tk.Button.configure(self, bg=bg, fg=fg, activebackground=bg, activeforeground=fg, disabledforeground=fg)
+
+    def _apply_state(self, state):
+        self._enabled = str(state) != tk.DISABLED
+        tk.Button.configure(self, state=tk.NORMAL if self._enabled else tk.DISABLED)
+        if self._enabled:
+            self._paint(self.ON_BG, self.ON_FG)
+        else:
+            self._paint(self.OFF_BG, self.OFF_FG)
+
+    def configure(self, cnf=None, **kw):
+        # Changing the state also changes the colors
+        if "state" in kw:
+            self._apply_state(kw.pop("state"))
+            if cnf is None and not kw:
+                return None
+        return super().configure(cnf, **kw)
+
+    config = configure
+
+    def _on_press(self, event=None):
+        if self._enabled:
+            self._paint(self.PRESS_BG, self.PRESS_FG)
+
+    def _on_release(self, event=None):
+        if self._enabled:
+            self._paint(self.ON_BG, self.ON_FG)
 
 class FileSelectorDialog(tk.Toplevel):
     def __init__(self, parent, initial_dir):
@@ -479,8 +526,8 @@ class CR3ToDNGApp:
         lbl_title = tk.Label(main_frame, text="CR3 MULTI CONVERTER", font=("Inter", 22, "bold"), bg="#0d1117", fg="#ffffff")
         lbl_title.pack(pady=4)
 
-        self.btn_select = GreyButton(main_frame, text="1. Select .CR3 Files", command=self.select_files,
-                                    bg="#21262d", fg="#ffffff", font=("Inter", 24, "bold"), bd=1, relief="solid", highlightthickness=0, padx=15, pady=14)
+        self.btn_select = LightButton(main_frame, text="1. Select .CR3 Files", command=self.select_files,
+                                      font=("Inter", 24, "bold"), bd=1, relief="solid", highlightthickness=0, padx=15, pady=14)
         self.btn_select.pack(fill=tk.X, pady=6)
 
         self.lbl_status = tk.Label(main_frame, text="No files selected", font=("Inter", 20, "bold"), bg="#0d1117", fg="#ffffff")
@@ -505,8 +552,8 @@ class CR3ToDNGApp:
                                     bg="#21262d", fg="#ffffff", font=("Inter", 20, "bold"), bd=1, relief="solid", highlightthickness=0, padx=15, pady=10)
         self.btn_output.pack(fill=tk.X, pady=6)
 
-        self.btn_convert = tk.Button(main_frame, text="2. Start Conversion", command=self.start_conversion, state=tk.DISABLED,
-                                     bg="#ffffff", fg="#0d1117", font=("Inter", 24, "bold"), bd=1, relief="solid", highlightthickness=0, padx=15, pady=14)
+        self.btn_convert = LightButton(main_frame, text="2. Start Conversion", command=self.start_conversion, state=tk.DISABLED,
+                                       font=("Inter", 24, "bold"), bd=1, relief="solid", highlightthickness=0, padx=15, pady=14)
         self.btn_convert.pack(fill=tk.X, pady=6)
 
         # Log area with auto-hiding scrollbar superimposed over the text
@@ -575,6 +622,20 @@ class CR3ToDNGApp:
     def status_safe(self, message):
         self.lbl_status.config(text=message)
 
+    def update_select_button_text(self):
+        if self.files_to_convert:
+            self.btn_select.config(text="1. Add .CR3 Files")
+        else:
+            self.btn_select.config(text="1. Select .CR3 Files")
+
+    def finish_batch_ui(self):
+        """After a conversion: empty the waiting list (the log keeps the history) and reset the buttons."""
+        self.files_to_convert.clear()
+        self.update_select_button_text()
+        self.btn_select.config(state=tk.NORMAL)
+        self.btn_output.config(state=tk.NORMAL)
+        self.btn_convert.config(state=tk.DISABLED)
+
     def select_files(self):
         dialog = FileSelectorDialog(self.root, self.last_dir)
         self.root.wait_window(dialog)
@@ -601,6 +662,7 @@ class CR3ToDNGApp:
             total_noun = "file" if total_ready == 1 else "files"
 
             self.lbl_status.config(text=f"{total_ready} .CR3 {total_noun} ready")
+            self.update_select_button_text()
             self.btn_convert.config(state=tk.NORMAL)
 
             if first_selection:
@@ -710,10 +772,7 @@ class CR3ToDNGApp:
         self.root.after(0, lambda: self.log_safe(f"\nBatch completed! Processed {success_count}/{total} files."))
         self.root.after(0, lambda: messagebox.showinfo("Completed", f"Multiple conversion completed ({success_count} files processed)."))
         # The converted files leave the waiting list; the log keeps the history until the app is closed
-        self.root.after(0, lambda: self.files_to_convert.clear())
-        self.root.after(0, lambda: self.btn_select.config(state=tk.NORMAL))
-        self.root.after(0, lambda: self.btn_output.config(state=tk.NORMAL))
-        self.root.after(0, lambda: self.btn_convert.config(state=tk.DISABLED))
+        self.root.after(0, self.finish_batch_ui)
 
 if __name__ == "__main__":
     root = tk.Tk()
