@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Canon CR3 Multi Converter
+CR3 Multi Converter
 A graphical batch conversion tool for Canon .CR3 files on Raspberry Pi.
 Author: Flavio Scutti
 """
@@ -303,7 +303,7 @@ class FileSelectorDialog(tk.Toplevel):
 class CR3ToDNGApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Canon CR3 Multi Converter")
+        self.root.title("CR3 Multi Converter")
         self.root.geometry("1024x768")
         self.root.minsize(800, 680)
         self.root.resizable(True, True)
@@ -315,7 +315,7 @@ class CR3ToDNGApp:
         main_frame = tk.Frame(root, bg="#0d1117", padx=15, pady=15)
         main_frame.pack(fill=tk.BOTH, expand=True)
 
-        lbl_title = tk.Label(main_frame, text="CANON CR3 MULTI CONVERTER", font=("Inter", 22, "bold"), bg="#0d1117", fg="#ffffff")
+        lbl_title = tk.Label(main_frame, text="CR3 MULTI CONVERTER", font=("Inter", 22, "bold"), bg="#0d1117", fg="#ffffff")
         lbl_title.pack(pady=4)
 
         self.btn_select = tk.Button(main_frame, text="1. Select .CR3 Files", command=self.select_files,

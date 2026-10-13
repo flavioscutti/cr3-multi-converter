@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=Canon CR3 Converter
+Name=CR3 Multi Converter
 Comment=Batch conversion of CR3 files
 Exec=sh -c 'python3 "$HOME/cr3-multi-converter/cr3_to_dng.py"'
 Icon=camera-photo

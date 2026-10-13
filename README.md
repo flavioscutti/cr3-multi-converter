@@ -1,4 +1,4 @@
-# Canon CR3 Multi Converter for Raspberry Pi
+# CR3 Multi Converter for Raspberry Pi
 
 A graphical Python (Tkinter) application designed for touchscreen use on Raspberry Pi OS. It converts `.CR3` files in batch (for example from a Canon EOS R50V or any other Canon camera supported by `dnglab`) into:
 
@@ -13,7 +13,7 @@ RAW editors do not always help either: in our testing, Darktable 5.6.2 (Flatpak,
 
 <p align="center">
   <br>
-  <img src="screenshot.png" alt="Canon CR3 Multi Converter" width="700">
+  <img src="screenshot.png" alt="CR3 Multi Converter" width="700">
   <br>
 </p>
 
