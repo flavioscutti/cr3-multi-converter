@@ -4,6 +4,11 @@
 CR3 Multi Converter
 A graphical batch conversion tool for Canon .CR3 files on Raspberry Pi.
 Author: Flavio Scutti
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 """
 
 import os
